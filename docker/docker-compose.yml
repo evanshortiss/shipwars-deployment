@@ -21,6 +21,7 @@ services:
       HTTP_PORT: 8181
       LOG_LEVEL: debug
       NODE_ENV: prod
+      HUSKY_SKIP_HOOKS: 1
       AI_AGENT_SERVER_URL: http://shipwars-bot-server:8282
       CLUSTER_NAME: Docker
     restart: unless-stopped
@@ -35,6 +36,7 @@ services:
     environment:
       HTTP_PORT: 8282
       NODE_ENV: prod
+      HUSKY_SKIP_HOOKS: 1
       AI_SERVER_URL: http://shipwars-move-server:8080/
     restart: unless-stopped
 
