@@ -1,0 +1,53 @@
+version: '3'
+
+services:
+  shipwars-client:
+    container_name: shipwars-client
+    image: quay.io/evanshortiss/shipwars-client:latest
+    depends_on:
+      - shipwars-game-server
+    ports:
+      - 8484:8484/tcp
+    restart: unless-stopped
+
+  shipwars-game-server:
+    container_name: shipwars-game-server
+    build: ./Dockerfile.node
+    command: sh -c "echo 'Shipwars game server starting npm install. Please wait....' && npm i && npm run dev"
+    volumes:
+      - '../../shipwars-game-server:/usr/src/app/'
+    depends_on:
+      - shipwars-bot-server
+    ports:
+      - 8181:8181/tcp
+    environment:
+      HTTP_PORT: 8181
+      LOG_LEVEL: debug
+      NODE_ENV: dev
+      AI_AGENT_SERVER_URL: http://shipwars-bot-server:8282
+      CLUSTER_NAME: Docker
+    restart: unless-stopped
+
+  shipwars-bot-server:
+    container_name: shipwars-bot-server
+    image: quay.io/evanshortiss/shipwars-bot-server:latest
+    build: ./Dockerfile.node
+    command: sh -c "echo 'Shipwars bot server starting npm install. Please wait....' && npm i && npm run dev"
+    volumes:
+      - '../../shipwars-bots:/usr/src/app/'
+    depends_on:
+      - shipwars-move-server
+    ports:
+      - 8282:8282/tcp
+    environment:
+      HTTP_PORT: 8282
+      NODE_ENV: dev
+      AI_SERVER_URL: http://shipwars-move-server:8080/
+    restart: unless-stopped
+
+  shipwars-move-server:
+    container_name: shipwars-move-server
+    image: quay.io/evanshortiss/shipwars-move-server:latest
+    ports:
+      - 8080:8080/tcp
+    restart: unless-stopped
