@@ -1,8 +1,35 @@
 # Red Hat Arcade: Shipwars Deployment
 
 This repository contains instructions and files to deploy the Shipwars game on
-OpenShift 4.x or via Docker Compose. It also contains a useful Docker Compose
-to assist with local development setup.
+an OpenShift 4.x cluster, or via Docker Compose.
+
+It also contains a useful Docker Compose to assist with local development setup.
+
+<div align="center">
+	<br>
+    <img style="max-width: 500px;" src="images/shipwars.png"/>
+	<br>
+  <i>Shipwars running in a web browser.</i>
+</div>
+
+## OpenShift
+
+Deploys the game into a project named "shipwars". Requires an OpenShift 4.x cluster.
+
+```bash
+# Login to your cluster using a token, or username and password
+oc login
+
+# Run the deploy script
+cd openshift/
+./deploy
+
+# Print the route to the game UI
+oc get route shipwars-client -n shipwars -o jsonpath='{.spec.host}'
+```
+
+The last command provides a route that you can visit in your browser to play
+the game.
 
 ## Docker Compose
 
