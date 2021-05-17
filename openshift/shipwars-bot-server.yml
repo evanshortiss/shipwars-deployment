@@ -57,7 +57,7 @@ objects:
               name: shipwars-bot-server
               resources:
                 requests:
-                  cpu: 250m
+                  cpu: 150m
                   memory: 256Mi
                 limits:
                   cpu: 250m
