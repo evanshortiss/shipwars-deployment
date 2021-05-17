@@ -1,0 +1,23 @@
+apiVersion: v1
+kind: Template
+
+parameters:
+  - name: NAMESPACE
+    required: true
+  - name: LOG_LEVEL
+    required: true
+  - name: CONFIG_MAP_NAME
+    required: true
+
+objects:
+  - apiVersion: v1
+    kind: ConfigMap
+    metadata:
+      name: ${CONFIG_MAP_NAME}
+    data:
+      CLUSTER_NAME: 'Red Hat Arcade'
+      NODE_ENV: prod
+      HTTP_PORT: '8080'
+      LOG_LEVEL: ${LOG_LEVEL}
+      NAMESPACE: ${NAMESPACE}
+      AI_SERVER_URL: http://shipwars-move-server.${NAMESPACE}.svc.cluster.local:8080

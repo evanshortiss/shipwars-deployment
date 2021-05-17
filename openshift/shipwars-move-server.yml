@@ -1,0 +1,95 @@
+apiVersion: v1
+kind: Template
+
+metadata:
+  name: shipwars-move-server
+
+parameters:
+  - name: CONFIG_MAP_NAME
+    required: true
+  - name: NAMESPACE
+    required: true
+
+objects:
+  - kind: DeploymentConfig
+    apiVersion: apps.openshift.io/v1
+    metadata:
+      name: shipwars-move-server
+      namespace: ${NAMESPACE}
+      labels:
+        app: shipwars-move-server
+        app.kubernetes.io/component: shipwars-move-server
+        app.kubernetes.io/instance: shipwars-move-server
+        app.kubernetes.io/part-of: shipwars-game
+        app.openshift.io/runtime: python
+        app.openshift.io/runtime-namespace: ${NAMESPACE}
+    spec:
+      strategy:
+        type: Rolling
+        rollingParams:
+          updatePeriodSeconds: 1
+          intervalSeconds: 1
+          timeoutSeconds: 600
+          maxUnavailable: 25%
+          maxSurge: 25%
+        resources: {}
+        activeDeadlineSeconds: 21600
+      triggers:
+        - type: ConfigChange
+      replicas: 1
+      revisionHistoryLimit: 10
+      test: false
+      selector:
+        app: shipwars-move-server
+        deploymentconfig: shipwars-move-server
+      template:
+        metadata:
+          creationTimestamp: null
+          labels:
+            app: shipwars-move-server
+            deploymentconfig: shipwars-move-server
+        spec:
+          containers:
+            - name: shipwars-move-server
+              image: quay.io/evanshortiss/shipwars-move-server:latest
+              ports:
+                - containerPort: 8080
+                  protocol: TCP
+              resources:
+                requests:
+                  cpu: 150m
+                  memory: 128Mi
+                limits:
+                  cpu: 150m
+                  memory: 128Mi
+              terminationMessagePath: /dev/termination-log
+              terminationMessagePolicy: File
+              imagePullPolicy: IfNotPresent
+          restartPolicy: Always
+          terminationGracePeriodSeconds: 30
+          dnsPolicy: ClusterFirst
+          securityContext: {}
+          schedulerName: default-scheduler
+
+  - apiVersion: v1
+    kind: Service
+    metadata:
+      labels:
+        app: shipwars-move-server
+        app.kubernetes.io/component: shipwars-move-server
+        app.kubernetes.io/instance: shipwars-move-server
+        app.kubernetes.io/part-of: shipwars-game
+        app.openshift.io/runtime-version: latest
+      name: shipwars-move-server
+      namespace: ${NAMESPACE}
+    spec:
+      ports:
+      - name: 8080-tcp
+        port: 8080
+        protocol: TCP
+        targetPort: 8080
+      selector:
+        app: shipwars-move-server
+        deploymentconfig: shipwars-move-server
+      sessionAffinity: None
+      type: ClusterIP
