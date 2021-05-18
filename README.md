@@ -75,13 +75,13 @@ docker-compose up --force-recreate --remove-orphans
 Once the containers have started the game will become available at
 http://localhost:8484.
 
-## Docker Local Development Mode
+## Docker/Podman Local Development Mode
 
 _NOTE: Only the Node.js containers support local development with live reload at present. Other images will need to be built and pushed to see changes reflected._
 
-Clone the repositories as instructed
+Clone the repositories in the structure outlined in the previous section.
 
-To start the local development containers run the following commands:
+### Docker Compose
 
 ```bash
 # Change into the directory with the local dev docker-compose file
@@ -89,7 +89,25 @@ cd shipwars-deployment/docker-local-dev/
 
 # Start the containers. This can take a minute or two since dependencies
 # are installed for the game server and bots server
-docker-compose up --force-recreate --remove-orphans
+docker-compose up
+
+# Remember to stop containers once finished
+docker-compose down
+```
+
+### Podman Compose
+
+```bash
+# Change into the directory with the local dev docker-compose file
+cd shipwars-deployment/podman-local-dev/
+
+# Start the containers. This can take a minute or two since dependencies
+# are installed for the game server and bots server
+podman-compose pull
+podman-compose up
+
+# Remember to stop containers once finished
+podman-compose down
 ```
 
 Once the containers have started the game will become available at
