@@ -7,14 +7,18 @@ It also contains a useful Docker Compose to assist with local development setup.
 
 <div align="center">
 	<br>
-    <img style="max-width: 500px;" src="images/shipwars.png"/>
+    <img style="max-width: 400px;" src="images/shipwars.png"/>
 	<br>
   <i>Shipwars running in a web browser.</i>
 </div>
 
 ## OpenShift
 
-Deploys the game into a project named "shipwars". Requires an OpenShift 4.x cluster.
+Requirements:
+
+* OpenShift 4.x cluster.
+* OpenShift CLI (`oc`) 4.x.
+* Account with permission to create a project and deploy resources into it.
 
 ```bash
 # Login to your cluster using a token, or username and password
@@ -28,8 +32,21 @@ cd openshift/
 oc get route shipwars-client -n shipwars -o jsonpath='{.spec.host}'
 ```
 
-The last command provides a route that you can visit in your browser to play
-the game.
+Notes on the default configuration:
+
+* Deploys the game services into a project named "shipwars".
+* Requests 500 millicores and 768MB memory from the cluster.
+* Supports *at least* 100 conncurrent players.
+
+The deployment creates a topology similar to the following screenshot:
+
+
+<div align="center">
+	<br>
+    <img style="max-width: 400px;" src="images/topology.png"/>
+	<br>
+  <i>Shipwars OpenShift Topology.</i>
+</div>
 
 ## Docker Compose
 
