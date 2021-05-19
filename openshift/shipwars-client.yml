@@ -53,7 +53,7 @@ objects:
             imagePullPolicy: IfNotPresent
             name: shipwars-client
             ports:
-            - containerPort: 8080
+            - containerPort: 8484
               protocol: TCP
             resources:
               requests:
@@ -88,10 +88,10 @@ objects:
       namespace: ${NAMESPACE}
     spec:
       ports:
-      - name: 8080-tcp
-        port: 8080
+      - name: 8484-tcp
+        port: 8484
         protocol: TCP
-        targetPort: 8080
+        targetPort: 8484
       selector:
         app: shipwars-client
         deploymentconfig: shipwars-client
@@ -113,7 +113,7 @@ objects:
       namespace: ${NAMESPACE}
     spec:
       port:
-        targetPort: 8080-tcp
+        targetPort: 8484-tcp
       tls:
         insecureEdgeTerminationPolicy: Redirect
         termination: edge
