@@ -64,7 +64,7 @@ objects:
                   memory: 128Mi
               terminationMessagePath: /dev/termination-log
               terminationMessagePolicy: File
-              imagePullPolicy: IfNotPresent
+              imagePullPolicy: Always
           restartPolicy: Always
           terminationGracePeriodSeconds: 30
           dnsPolicy: ClusterFirst

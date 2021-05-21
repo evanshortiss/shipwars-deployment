@@ -50,7 +50,7 @@ objects:
         spec:
           containers:
           - image: quay.io/evanshortiss/shipwars-client:latest
-            imagePullPolicy: IfNotPresent
+            imagePullPolicy: Always
             name: shipwars-client
             ports:
             - containerPort: 8484
