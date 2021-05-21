@@ -20,4 +20,5 @@ objects:
       HTTP_PORT: '8080'
       LOG_LEVEL: ${LOG_LEVEL}
       NAMESPACE: ${NAMESPACE}
-      AI_SERVER_URL: http://shipwars-move-server.${NAMESPACE}.svc.cluster.local:8080
+      AI_SERVER_URL: http://shipwars-move-server:8080
+      AI_AGENT_SERVER_URL: http://shipwars-bot-server:8080
