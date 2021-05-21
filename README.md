@@ -26,7 +26,9 @@ oc login
 
 # Run the deploy script
 cd openshift/
-./deploy
+
+# Set the target namespace (created if it doesn't exist) and deploy into it
+NAMESPACE=shipwars ./deploy
 
 # Print the route to the game UI
 oc get route shipwars-client -n shipwars -o jsonpath='{.spec.host}'
