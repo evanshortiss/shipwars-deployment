@@ -116,6 +116,7 @@ objects:
       name: shipwars-game-server
       namespace: ${NAMESPACE}
     spec:
+      path: /shipwars
       port:
         targetPort: 8080-tcp
       tls:
