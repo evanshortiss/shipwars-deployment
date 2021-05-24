@@ -112,7 +112,7 @@ objects:
       name: shipwars-client
       namespace: ${NAMESPACE}
     spec:
-      path: /shipwars/
+      path: /shipwars
       port:
         targetPort: 8484-tcp
       tls:
