@@ -18,17 +18,45 @@ services:
     image: quay.io/strimzi/kafka:0.21.1-kafka-2.7.0
     command: [
       'sh', '-c',
-      'bin/kafka-server-start.sh config/server.properties --override listeners=$${KAFKA_LISTENERS} --override advertised.listeners=$${KAFKA_ADVERTISED_LISTENERS} --override zookeeper.connect=$${KAFKA_ZOOKEEPER_CONNECT}'
+      'bin/kafka-server-start.sh config/server.properties --override listeners=$${KAFKA_LISTENERS} --override advertised.listeners=$${KAFKA_ADVERTISED_LISTENERS} --override listener.security.protocol.map=$${KAFKA_LISTENER_SECURITY_PROTOCOL_MAP} --override zookeeper.connect=$${KAFKA_ZOOKEEPER_CONNECT}'
     ]
     depends_on:
       - zookeeper
     ports:
       - 9092:9092/tcp
+      - 9094:9094/tcp
     environment:
       LOG_DIR: '/tmp/logs'
-      KAFKA_ADVERTISED_LISTENERS: PLAINTEXT://kafka:9092
-      KAFKA_LISTENERS: PLAINTEXT://0.0.0.0:9092
+      # Expose Kafka tp internal docker network and external host processes
+      KAFKA_ADVERTISED_LISTENERS: PLAINTEXT://kafka:9092,PLAINTEXT_EXT://localhost:9094
+      KAFKA_LISTENERS: PLAINTEXT://kafka:9092,PLAINTEXT_EXT://0.0.0.0:9094
       KAFKA_ZOOKEEPER_CONNECT: zookeeper:2181
+      KAFKA_LISTENER_SECURITY_PROTOCOL_MAP: PLAINTEXT:PLAINTEXT,PLAINTEXT_EXT:PLAINTEXT
+
+  kafka-create-topics:
+    container_name: kafka-create-topics
+    image: quay.io/strimzi/kafka:0.21.1-kafka-2.7.0
+    command: [
+      'sh', '-c',
+      'bin/kafka-topics.sh --create --topic shipwars-streams-shots-aggregate --bootstrap-server kafka:9092 && bin/kafka-topics.sh --create --topic shipwars-attacks --bootstrap-server kafka:9092'
+    ]
+    depends_on:
+      - kafka
+
+  shipwars-streams:
+    container_name: shipwars-streams
+    depends_on:
+      - shipwars-game-server
+    build:
+      context: ../../shipwars-streams/
+    volumes:
+      - '../../shipwars-streams:/usr/src/app/'
+    environment:
+      QUARKUS_KAFKA_STREAMS_BOOTSTRAP_SERVERS: kafka:9092
+      QUARKUS_HTTP_PORT: 8585
+    ports:
+      - 8585:8585/tcp
+    restart: unless-stopped
 
   shipwars-client:
     container_name: shipwars-client
@@ -41,7 +69,9 @@ services:
 
   shipwars-game-server:
     container_name: shipwars-game-server
-    build: ./Dockerfile.node
+    build: ./node
+    depends_on:
+      - kafka
     command: sh -c "echo 'Shipwars game server starting npm install. Please wait....' && npm i && npm run dev"
     volumes:
       - '../../shipwars-game-server:/usr/src/app/'
@@ -61,7 +91,7 @@ services:
   shipwars-bot-server:
     container_name: shipwars-bot-server
     image: quay.io/evanshortiss/shipwars-bot-server:latest
-    build: ./Dockerfile.node
+    build: ./node
     command: sh -c "echo 'Shipwars bot server starting npm install. Please wait....' && npm i && npm run dev"
     volumes:
       - '../../shipwars-bots:/usr/src/app/'

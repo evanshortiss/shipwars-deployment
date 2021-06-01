@@ -62,6 +62,7 @@ workspace/
 ├── shipwars-deployment/
 ├── shipwars-game-server/
 └── shipwars-move-server/
+└── shipwars-streams/
 ```
 
 Run the following commands to start the containers:
