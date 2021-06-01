@@ -65,24 +65,33 @@ workspace/
 └── shipwars-streams/
 ```
 
-Run the following commands to start the containers:
+Run the following commands from the root of this repository to start the containers:
 
 ```bash
 # Change into the directory with the local dev docker-compose file
 cd shipwars-deployment/docker/
 
-# Start the containers. This can take a minute
-docker-compose up --force-recreate --remove-orphans
+# Start the containers. This can take a minute to pull/build images etc
+docker-compose up --build --force-recreate
 ```
 
 Once the containers have started the game will become available at
-http://localhost:8484.
+http://localhost:8484/.
 
 ## Docker/Podman Local Development Mode
 
 _NOTE: Only the Node.js containers support local development with live reload at present. Other images will need to be built and pushed to see changes reflected._
 
-Clone the repositories in the structure outlined in the previous section.
+Clone the repositories from [redhat-gamedev](https://github.com/redhat-gamedev) in the structure outlined below:
+
+```bash
+workspace/
+├── shipwars-bots/
+├── shipwars-client/
+├── shipwars-deployment/
+├── shipwars-game-server/
+└── shipwars-move-server/
+```
 
 ### Docker Compose
 
