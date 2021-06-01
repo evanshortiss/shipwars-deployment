@@ -52,27 +52,18 @@ The deployment creates a topology similar to the following screenshot:
 
 ## Docker Compose
 
-Git clone all of the Shipwars repos into the same folder. The result should
-look like this:
-
-```
-workspace/
-├── shipwars-bots/
-├── shipwars-client/
-├── shipwars-deployment/
-├── shipwars-game-server/
-└── shipwars-move-server/
-└── shipwars-streams/
-```
-
-Run the following commands from the root of this repository to start the containers:
+Run the following commands from the root of this repository to start the
+pre-built containers that are hosted on quay.io:
 
 ```bash
 # Change into the directory with the local dev docker-compose file
 cd shipwars-deployment/docker/
 
-# Start the containers. This can take a minute to pull/build images etc
-docker-compose up --build --force-recreate
+# Start the containers. This can take a minute to pull images
+docker-compose up
+
+# Ensure containers all containers are stopped/removed
+docker-compose down
 ```
 
 Once the containers have started the game will become available at
@@ -89,6 +80,7 @@ workspace/
 ├── shipwars-bots/
 ├── shipwars-client/
 ├── shipwars-deployment/
+├── shipwars-streams/
 ├── shipwars-game-server/
 └── shipwars-move-server/
 ```
@@ -100,8 +92,8 @@ workspace/
 cd shipwars-deployment/docker-local-dev/
 
 # Start the containers. This can take a minute or two since dependencies
-# are installed for the game server and bots server
-docker-compose up
+# are installed for the game server, quarkus kafka streams, and bots server
+docker-compose up --build --force-recreate
 
 # Remember to stop containers once finished
 docker-compose down
