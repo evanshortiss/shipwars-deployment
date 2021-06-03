@@ -11,13 +11,13 @@ parameters:
     required: true
 
 objects:
-  - kind: DeploymentConfig
-    apiVersion: apps.openshift.io/v1
+  - kind: Deployment
+    apiVersion: apps/v1
     metadata:
-      name: shipwars-game-server
       annotations:
         app.openshift.io/connects-to: >-
-          [{"apiVersion":"apps.openshift.io/v1","kind":"DeploymentConfig","name":"shipwars-bot-server"}]
+          [{"apiVersion":"apps.openshift.io/v1","kind":"DeploymentConfig","name":"shipwars-move-server"}]
+      name: shipwars-game-server
       namespace: ${NAMESPACE}
       labels:
         app: shipwars-game-server
@@ -27,24 +27,10 @@ objects:
         app.openshift.io/runtime: nodejs
         app.openshift.io/runtime-namespace: ${NAMESPACE}
     spec:
-      strategy:
-        type: Rolling
-        rollingParams:
-          updatePeriodSeconds: 1
-          intervalSeconds: 1
-          timeoutSeconds: 600
-          maxUnavailable: 25%
-          maxSurge: 25%
-        resources: {}
-        activeDeadlineSeconds: 21600
-      triggers:
-        - type: ConfigChange
       replicas: 1
-      revisionHistoryLimit: 10
-      test: false
       selector:
-        app: shipwars-game-server
-        deploymentconfig: shipwars-game-server
+        matchLabels:
+          app: shipwars-game-server
       template:
         metadata:
           creationTimestamp: null
@@ -55,27 +41,32 @@ objects:
           containers:
             - name: shipwars-game-server
               image: quay.io/evanshortiss/shipwars-game-server:latest
-              resources:
-                requests:
-                  cpu: 150m
-                  memory: 256Mi
-                limits:
-                  cpu: 250m
-                  memory: 256Mi
               ports:
                 - containerPort: 8080
                   protocol: TCP
               envFrom:
                 - configMapRef:
-                    name: ${CONFIG_MAP_NAME}
+                    name: shipwars-shared-config
+              resources:
+                limits:
+                  cpu: 250m
+                  memory: 256Mi
+                requests:
+                  cpu: 150m
+                  memory: 256Mi
               terminationMessagePath: /dev/termination-log
               terminationMessagePolicy: File
               imagePullPolicy: Always
           restartPolicy: Always
           terminationGracePeriodSeconds: 30
           dnsPolicy: ClusterFirst
-          securityContext: {}
-          schedulerName: default-scheduler
+      strategy:
+        type: RollingUpdate
+        rollingUpdate:
+          maxUnavailable: 25%
+          maxSurge: 25%
+      revisionHistoryLimit: 10
+      progressDeadlineSeconds: 600
 
   - apiVersion: v1
     kind: Service

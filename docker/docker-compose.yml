@@ -1,56 +1,18 @@
 version: '3'
 
 services:
-  zookeeper:
-    container_name: zookeeper
-    image: quay.io/strimzi/kafka:0.21.1-kafka-2.7.0
-    command: [
-        'sh', '-c',
-        'bin/zookeeper-server-start.sh config/zookeeper.properties'
-      ]
-    ports:
-      - 2181:2181/tcp
-    environment:
-      LOG_DIR: /tmp/logs
-
-  kafka:
-    container_name: kafka
-    image: quay.io/strimzi/kafka:0.21.1-kafka-2.7.0
-    command: [
-      'sh', '-c',
-      'bin/kafka-server-start.sh config/server.properties --override listeners=$${KAFKA_LISTENERS} --override advertised.listeners=$${KAFKA_ADVERTISED_LISTENERS} --override listener.security.protocol.map=$${KAFKA_LISTENER_SECURITY_PROTOCOL_MAP} --override zookeeper.connect=$${KAFKA_ZOOKEEPER_CONNECT}'
-    ]
-    depends_on:
-      - zookeeper
-    ports:
-      - 9092:9092/tcp
-      - 9094:9094/tcp
-    environment:
-      LOG_DIR: '/tmp/logs'
-      # Expose Kafka tp internal docker network and external host processes
-      KAFKA_ADVERTISED_LISTENERS: PLAINTEXT://kafka:9092,PLAINTEXT_EXT://localhost:9094
-      KAFKA_LISTENERS: PLAINTEXT://kafka:9092,PLAINTEXT_EXT://0.0.0.0:9094
-      KAFKA_ZOOKEEPER_CONNECT: zookeeper:2181
-      KAFKA_LISTENER_SECURITY_PROTOCOL_MAP: PLAINTEXT:PLAINTEXT,PLAINTEXT_EXT:PLAINTEXT
-
-  kafka-create-topics:
-    container_name: kafka-create-topics
-    image: quay.io/strimzi/kafka:0.21.1-kafka-2.7.0
-    command: [
-      'sh', '-c',
-      'bin/kafka-topics.sh --create --topic shipwars-streams-shots-aggregate --bootstrap-server kafka:9092 && bin/kafka-topics.sh --create --topic shipwars-attacks --bootstrap-server kafka:9092'
-    ]
-    depends_on:
-      - kafka
-
   shipwars-streams:
     container_name: shipwars-streams
     depends_on:
       - shipwars-game-server
     image: quay.io/evanshortiss/shipwars-streams-shot-distribution:latest
     environment:
-      QUARKUS_KAFKA_STREAMS_BOOTSTRAP_SERVERS: kafka:9092
       QUARKUS_HTTP_PORT: 8585
+      # These must be set in your environment when running docker-compose up
+      QUARKUS_KAFKA_STREAMS_BOOTSTRAP_SERVERS: "${KAFKACONNECTION_BOOTSTRAPSERVERS}"
+      KAFKA_BOOTSTRAP_SERVERS: "${KAFKACONNECTION_BOOTSTRAPSERVERS}"
+      KAFKA_CLIENT_ID: "${KAFKACONNECTION_USER}"
+      KAFKA_CLIENT_SECRET: "${KAFKACONNECTION_PASSWORD}"
     ports:
       - 8585:8585/tcp
     restart: unless-stopped
@@ -75,18 +37,19 @@ services:
       HTTP_PORT: 8181
       LOG_LEVEL: debug
       NODE_ENV: prod
-      KAFKACONNECTION_BOOTSTRAPSERVERS: kafka:9092
-      KAFKACONNECTION_SSL: 'false'
       HUSKY_SKIP_HOOKS: 1
       AI_AGENT_SERVER_URL: http://shipwars-bot-server:8282
       CLUSTER_NAME: Docker
+      # These must be set in your environment when running docker-compose up
+      KAFKACONNECTION_BOOTSTRAPSERVERS: "${KAFKACONNECTION_BOOTSTRAPSERVERS}"
+      KAFKACONNECTION_SSL: "${KAFKACONNECTION_SSL}"
+      KAFKACONNECTION_USER: "${KAFKACONNECTION_USER}"
+      KAFKACONNECTION_PASSWORD: "${KAFKACONNECTION_PASSWORD}"
     restart: unless-stopped
 
   shipwars-bot-server:
     container_name: shipwars-bot-server
     image: quay.io/evanshortiss/shipwars-bot-server:latest
-    depends_on:
-      - kafka
     ports:
       - 8282:8282/tcp
     environment:

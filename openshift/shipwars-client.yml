@@ -16,7 +16,8 @@ objects:
     metadata:
       name: shipwars-client
       annotations:
-        app.openshift.io/connects-to: '[{"apiVersion":"apps.openshift.io/v1","kind":"DeploymentConfig","name":"shipwars-game-server"}]'
+        app.openshift.io/connects-to: >-
+          [{"apiVersion":"apps/v1","kind":"Deployment","name":"shipwars-game-server"}]
       generation: 3
       labels:
         app: shipwars-client

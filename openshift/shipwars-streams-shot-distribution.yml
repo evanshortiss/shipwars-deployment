@@ -1,0 +1,119 @@
+apiVersion: v1
+kind: Template
+
+metadata:
+  name: shipwars-streams-shot-distribution
+
+parameters:
+  - name: KAFKA_BOOTSTRAP_SERVERS
+    required: true
+  - name: NAMESPACE
+    required: true
+
+objects:
+  - kind: Deployment
+    apiVersion: apps/v1
+    metadata:
+      annotations:
+      name: shipwars-streams-shot-distribution
+      namespace: ${NAMESPACE}
+      labels:
+        app: shipwars-streams-shot-distribution
+        app.kubernetes.io/component: shipwars-streams-shot-distribution
+        app.kubernetes.io/instance: shipwars-streams-shot-distribution
+        app.kubernetes.io/part-of: shipwars-analysis
+        app.openshift.io/runtime: quarkus
+        app.openshift.io/runtime-namespace: ${NAMESPACE}
+    spec:
+      replicas: 1
+      selector:
+        matchLabels:
+          app: shipwars-streams-shot-distribution
+      template:
+        metadata:
+          creationTimestamp: null
+          labels:
+            app: shipwars-streams-shot-distribution
+            deploymentconfig: shipwars-streams-shot-distribution
+        spec:
+          containers:
+            - resources: {}
+              terminationMessagePath: /dev/termination-log
+              name: shipwars-streams-shot-distribution
+              env:
+                - name: KAFKA_BOOTSTRAP_SERVERS
+                  value: ${KAFKA_BOOTSTRAP_SERVERS}
+                - name: KAFKA_CLIENT_ID
+                  valueFrom:
+                    secretKeyRef:
+                      name: rh-cloud-services-service-account
+                      key: client-id
+                - name: KAFKA_CLIENT_SECRET
+                  valueFrom:
+                    secretKeyRef:
+                      name: rh-cloud-services-service-account
+                      key: client-secret
+              ports:
+                - containerPort: 8080
+                  protocol: TCP
+              imagePullPolicy: Always
+              terminationMessagePolicy: File
+              image: quay.io/evanshortiss/shipwars-streams-shot-distribution:latest
+          restartPolicy: Always
+          terminationGracePeriodSeconds: 30
+          dnsPolicy: ClusterFirst
+          securityContext: {}
+          schedulerName: default-scheduler
+      strategy:
+        type: RollingUpdate
+        rollingUpdate:
+          maxUnavailable: 25%
+          maxSurge: 25%
+      revisionHistoryLimit: 10
+      progressDeadlineSeconds: 600
+
+  - kind: Service
+    apiVersion: v1
+    metadata:
+      name: shipwars-streams-shot-distribution
+      namespace: ${NAMESPACE}
+      labels:
+        app: shipwars-streams-shot-distribution
+        app.kubernetes.io/component: shipwars-streams-shot-distribution
+        app.kubernetes.io/instance: shipwars-streams-shot-distribution
+        app.kubernetes.io/part-of: shipwars-analysis
+        app.openshift.io/runtime-version: latest
+    spec:
+      ports:
+        - name: 8080-tcp
+          protocol: TCP
+          port: 8080
+          targetPort: 8080
+      selector:
+        app: shipwars-streams-shot-distribution
+        deploymentconfig: shipwars-streams-shot-distribution
+      type: ClusterIP
+      sessionAffinity: None
+
+  - kind: Route
+    apiVersion: route.openshift.io/v1
+    metadata:
+      name: shipwars-streams-shot-distribution
+      namespace: ${NAMESPACE}
+      labels:
+        app: shipwars-streams-shot-distribution
+        app.kubernetes.io/component: shipwars-streams-shot-distribution
+        app.kubernetes.io/instance: shipwars-streams-shot-distribution
+        app.kubernetes.io/part-of: shipwars-analysis
+        app.openshift.io/runtime-version: latest
+    spec:
+      to:
+        kind: Service
+        name: shipwars-streams-shot-distribution
+        weight: 100
+      port:
+        targetPort: 8080-tcp
+      tls:
+        termination: edge
+        insecureEdgeTerminationPolicy: Redirect
+      wildcardPolicy: None
