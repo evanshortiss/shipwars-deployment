@@ -3,14 +3,26 @@
 This repository contains instructions and files to deploy the Shipwars game on
 an OpenShift 4.x cluster, or via Docker Compose.
 
-It also contains a useful Docker Compose to assist with local development setup.
-
 <div align="center">
 	<br>
     <img style="max-width: 400px;" src="images/shipwars.png"/>
 	<br>
   <i>Shipwars running in a web browser.</i>
 </div>
+
+## Architecture
+
+The Shipwars game has 4 core components:
+
+* [UI](https://github.com/redhat-gamedev/shipwars-client) (WebApp): Served using NGINX.
+* [Game Server](https://github.com/redhat-gamedev/shipwars-game-server) (Node.js): Clients connect to this via WebSocket. Executes game logic and uses in-memory storage. Integrates with Kafka to propogate game events.
+* [Bot Server](https://github.com/redhat-gamedev/shipwars-bots) (Node.js): Creates in-memory "Agents" that connect to the Game Server via WebSocket. Uses a State Machines to manage Agent behaviour.
+* [Move Server](https://github.com/redhat-gamedev/shipwars-move-server) (Python): Exposes a REST API that Agents call to retrieve their next move.
+
+An set of extended demo components that require Apache Kafka are also available:
+
+* [Kafka Streams Application](https://github.com/evanshortiss/shipwars-streams) (Java/Quarkus): Processes game events from the Game Server.
+* [Visualisations](https://github.com/evanshortiss/shipwars-visualisations) (WebApp): Provides visual representations of data from the Kafka Streams Application.
 
 ## Using with OpenShift Streams for Apache Kafka
 
