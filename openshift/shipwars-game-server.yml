@@ -16,7 +16,7 @@ objects:
     metadata:
       annotations:
         app.openshift.io/connects-to: >-
-          [{"apiVersion":"apps.openshift.io/v1","kind":"DeploymentConfig","name":"shipwars-move-server"}]
+          [{"apiVersion":"apps.openshift.io/v1","kind":"DeploymentConfig","name":"shipwars-bot-server"}]
       name: shipwars-game-server
       namespace: ${NAMESPACE}
       labels:
