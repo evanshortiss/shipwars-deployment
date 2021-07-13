@@ -1,6 +1,7 @@
 #!/usr/bin/env bash
 
 NAMESPACE=${NAMESPACE:-shipwars}
+DIR="$( cd "$( dirname "${BASH_SOURCE[0]}" )" >/dev/null 2>&1 && pwd )"
 
 if ! command -v oc &> /dev/null
 then
@@ -58,12 +59,42 @@ fi
 rhoas cluster connect -n $NAMESPACE
 rhoas cluster bind --app-name shipwars-game-server
 
-echo "Deploy Quarkus Kafka Streams application and visualisation UI"
+KAFKA_BOOTSTRAP_SERVERS=$(rhoas kafka describe | jq .bootstrap_server_host -r)
+
+echo "Deploy Quarkus Kafka Streams applications and visualisation UI"
+
+# Deploy the enricher Kafka Streams application. This performs a join between
+# a shot and player record to create a more informative enriched shot record
+oc process -f "${DIR}/shipwars-streams-shot-enricher.yml" \
+-p NAMESPACE="${NAMESPACE}" \
+-p KAFKA_BOOTSTRAP_SERVERS="${KAFKA_BOOTSTRAP_SERVERS}"
+
+# An aggregator implemented in Kafka Streams that tracks how often a given
+# cell coordinate is hit by players (AI and human) thereby capturing a shot
+# distribution. This also exposes an HTTP server sent events endpoint that can
+# stream shots to clients in realtime
 oc process -f "${DIR}/shipwars-streams-shot-distribution.yml" \
 -p NAMESPACE="${NAMESPACE}" \
--p KAFKA_BOOTSTRAP_SERVERS=$(rhoas kafka describe | jq .bootstrapServerHost -r) | oc create -f -
+-p KAFKA_BOOTSTRAP_SERVERS="${KAFKA_BOOTSTRAP_SERVERS}"
 
+# Another aggregator that tracks the shots fired for each game in series.
+# This can be used to replay games and/or write them somewhere for long term
+# permanent storage, e.g S3 buckets or DB
+oc process -f "${DIR}/shipwars-streams-match-aggregates.yml" \
+-p NAMESPACE="${NAMESPACE}" \
+-p KAFKA_BOOTSTRAP_SERVERS="${KAFKA_BOOTSTRAP_SERVERS}"
+
+# Deploy the replay UI, and instruct it to use the internal match aggregates
+# Quarkus/Kafka Streams application API
+oc new-app quay.io/evanshortiss/shipwars-replay-ui \
+-l "app.kubernetes.io/part-of=shipwars-analysis" \
+-e REPLAY_SERVER="http://shipwars-streams-match-aggregates:8080" \
+--name shipwars-replay
+
+oc expose svc shipwars-replay
+
+# A UI to see shots play out in realtime.
 oc new-app quay.io/evanshortiss/s2i-nodejs-nginx~https://github.com/evanshortiss/shipwars-visualisations \
 --name shipwars-visualisations \
---build-env BUILD_OUTPUT_DIR=dist \
+-l "app.kubernetes.io/part-of=shipwars-analysis,app.openshift.io/runtime=nginx" \
 --build-env STREAMS_API_URL="https://$(oc get route shipwars-streams-shot-distribution -o jsonpath='{.spec.host}')/shot-distribution/stream"
