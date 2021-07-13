@@ -43,6 +43,7 @@ rhoas kafka topic create shipwars-results --partitions 3
 # Create topics used by Kafka Streams
 rhoas kafka topic create shipwars-attacks-lite --partitions 3
 rhoas kafka topic create shipwars-streams-shots-aggregate --partitions 3
+rhoas kafka topic create shipwars-streams-matches-aggregate --partitions 3
 
 echo ""
 echo "Created required topics for the Shipwars game."
