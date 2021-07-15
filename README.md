@@ -69,6 +69,8 @@ cd openshift/
 # This deploys the primary game components, without Kafka integrations
 ./deploy.game.sh
 
+
+
 # Print the route to the game UI that you can access in your we browser
 oc get route shipwars-client -n shipwars -o jsonpath='{.spec.host}'
 ```
@@ -92,10 +94,16 @@ The deployment creates a topology similar to the following screenshot:
 ### Kafka Services and Integration
 
 Follow the "Using with OpenShift Streams for Apache Kafka" section, then run
-the following script:
+the following scripts:
 
 ```bash
-./openshift/deploy.kafka.sh
+# Create a KafkaConnection and ServiceBinding in the project
+# that connects the Node.js application to managed Kafka
+./openshift/deploy.kafka-bind.sh
+
+# Deploy Quarkus and Kafka Streams images, and use the KafkaConnection
+# secrets and information to connect them to managed Kafka
+./openshift/deploy.kafka-streams.sh
 ```
 
 This will:
