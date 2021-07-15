@@ -31,6 +31,15 @@ else
   exit 1
 fi
 
+# Check that the bind script has been run
+oc get kafkaconnection
+
+if [ $? -eq 1 ]; then
+  echo "No kafkaconnection CustomResource was found in the $NAMESPACE project."
+  echo "Please run deploy.kafka-bind.sh and retry this script."
+  exit 1
+fi
+
 rhoas login > /dev/null 2>&1
 
 if [ $? -eq 0 ]; then
@@ -46,18 +55,8 @@ if [ "0" == "$KAFKA_COUNT" ]; then
   echo "Please create a Kafka instance using 'rhoas kafka create' and retry this script"
 fi
 
-# Force user to choose a kafka instance
+# Force user to choose a the kafka instance
 rhoas kafka use
-
-# Check topics exist (yes, this is basic but should help)
-rhoas kafka topic list -o json | jq -r '.items[].name' | grep 'shipwars-attacks'
-if [ $? -eq 1 ]; then
-  echo "Please run the configure-rhosak.sh script in the root of this repository then retry this script."
-fi
-
-# Connect the chosen instance to the cluster
-rhoas cluster connect -n $NAMESPACE
-rhoas cluster bind --app-name shipwars-game-server
 
 KAFKA_BOOTSTRAP_SERVERS=$(rhoas kafka describe | jq .bootstrap_server_host -r)
 
@@ -67,7 +66,7 @@ echo "Deploy Quarkus Kafka Streams applications and visualisation UI"
 # a shot and player record to create a more informative enriched shot record
 oc process -f "${DIR}/shipwars-streams-shot-enricher.yml" \
 -p NAMESPACE="${NAMESPACE}" \
--p KAFKA_BOOTSTRAP_SERVERS="${KAFKA_BOOTSTRAP_SERVERS}"
+-p KAFKA_BOOTSTRAP_SERVERS="${KAFKA_BOOTSTRAP_SERVERS}" | oc create -f -
 
 # An aggregator implemented in Kafka Streams that tracks how often a given
 # cell coordinate is hit by players (AI and human) thereby capturing a shot
@@ -75,14 +74,14 @@ oc process -f "${DIR}/shipwars-streams-shot-enricher.yml" \
 # stream shots to clients in realtime
 oc process -f "${DIR}/shipwars-streams-shot-distribution.yml" \
 -p NAMESPACE="${NAMESPACE}" \
--p KAFKA_BOOTSTRAP_SERVERS="${KAFKA_BOOTSTRAP_SERVERS}"
+-p KAFKA_BOOTSTRAP_SERVERS="${KAFKA_BOOTSTRAP_SERVERS}" | oc create -f -
 
 # Another aggregator that tracks the shots fired for each game in series.
 # This can be used to replay games and/or write them somewhere for long term
 # permanent storage, e.g S3 buckets or DB
 oc process -f "${DIR}/shipwars-streams-match-aggregates.yml" \
 -p NAMESPACE="${NAMESPACE}" \
--p KAFKA_BOOTSTRAP_SERVERS="${KAFKA_BOOTSTRAP_SERVERS}"
+-p KAFKA_BOOTSTRAP_SERVERS="${KAFKA_BOOTSTRAP_SERVERS}" | oc create -f -
 
 # Deploy the replay UI, and instruct it to use the internal match aggregates
 # Quarkus/Kafka Streams application API
@@ -98,3 +97,5 @@ oc new-app quay.io/evanshortiss/s2i-nodejs-nginx~https://github.com/evanshortiss
 --name shipwars-visualisations \
 -l "app.kubernetes.io/part-of=shipwars-analysis,app.openshift.io/runtime=nginx" \
 --build-env STREAMS_API_URL="https://$(oc get route shipwars-streams-shot-distribution -o jsonpath='{.spec.host}')/shot-distribution/stream"
+
+oc expose svc shipwars-visualisations
