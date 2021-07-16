@@ -50,6 +50,11 @@ rhoas kafka create shipwars
 
 ## Deployment on OpenShift
 
+Deployment is separated into two distinct sections:
+
+1. [Reqiured] Deploy the core game services
+1. [Optional] Deploy the managed Kafka and Kafka Streams services
+
 ### Core Game Services
 
 Requirements:
@@ -69,9 +74,7 @@ cd openshift/
 # This deploys the primary game components, without Kafka integrations
 ./deploy.game.sh
 
-
-
-# Print the route to the game UI that you can access in your we browser
+# Print the route to the game UI that you can access in your web browser over HTTPS
 oc get route shipwars-client -n shipwars -o jsonpath='{.spec.host}'
 ```
 
@@ -97,6 +100,15 @@ Follow the "Using with OpenShift Streams for Apache Kafka" section, then run
 the following scripts:
 
 ```bash
+# Login using the browser based flow
+rhoas login
+
+# Create a kafka cluster named "shipwars"
+rhoas kafka create shipwars
+
+# Create the topics required by the applications
+./configure-rhosak.sh
+
 # Create a KafkaConnection and ServiceBinding in the project
 # that connects the Node.js application to managed Kafka
 ./openshift/deploy.kafka-bind.sh
