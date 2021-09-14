@@ -42,7 +42,7 @@ the root of this repository. This configures a Kafka instance on cloud.redhat.co
 rhoas login
 
 # Create a kafka cluster named "shipwars"
-rhoas kafka create shipwars
+rhoas kafka create --name shipwars
 
 # Create the topics required by the applications
 ./configure-rhosak.sh
@@ -104,7 +104,7 @@ the following scripts:
 rhoas login
 
 # Create a kafka cluster named "shipwars"
-rhoas kafka create shipwars
+rhoas kafka create --name shipwars
 
 # Create the topics required by the applications
 ./configure-rhosak.sh
