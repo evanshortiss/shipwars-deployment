@@ -34,16 +34,16 @@ fi
 rhoas kafka use
 
 # Create topics for game events (sent by the game server)
-rhoas kafka topic create shipwars-matches --partitions 3
-rhoas kafka topic create shipwars-players --partitions 3
-rhoas kafka topic create shipwars-attacks --partitions 3
-rhoas kafka topic create shipwars-bonuses --partitions 3
-rhoas kafka topic create shipwars-results --partitions 3
+rhoas kafka topic create --name shipwars-matches --partitions 3
+rhoas kafka topic create --name shipwars-players --partitions 3
+rhoas kafka topic create --name shipwars-attacks --partitions 3
+rhoas kafka topic create --name shipwars-bonuses --partitions 3
+rhoas kafka topic create --name shipwars-results --partitions 3
 
 # Create topics used by Kafka Streams
-rhoas kafka topic create shipwars-attacks-lite --partitions 3
-rhoas kafka topic create shipwars-streams-shots-aggregate --partitions 3
-rhoas kafka topic create shipwars-streams-matches-aggregate --partitions 3
+rhoas kafka topic create --name shipwars-attacks-lite --partitions 3
+rhoas kafka topic create --name shipwars-streams-shots-aggregate --partitions 3
+rhoas kafka topic create --name shipwars-streams-matches-aggregate --partitions 3
 
 echo ""
 echo "Created required topics for the Shipwars game."
